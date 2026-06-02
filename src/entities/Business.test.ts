@@ -107,7 +107,6 @@ describe('Business', () => {
   it('processDay pays operating costs only (real wages disbursed separately by BusinessSystem for conservation)', () => {
     business.hireEmployee(sampleResidentId);
 
-    const startCash = business.cash;
     const result = business.processDay();
 
     // Phase A fix: dailyExpenses === operating only (no embedded wages to prevent double outflow)

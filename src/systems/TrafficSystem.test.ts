@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { TrafficSystem, type VehicleSnapshot } from './TrafficSystem';
+import { TrafficSystem } from './TrafficSystem';
 import { TimeSystem } from '../core/TimeSystem';
 import { createTestSimulation, runFastTicks } from '../utils/simulationTestHelpers';
 

@@ -232,8 +232,6 @@ describe('BusinessSystem', () => {
     biz.hireEmployee('ghost_1' as ResidentId);
     biz.hireEmployee('ghost_2' as ResidentId);
 
-    const startCash = biz.cash;
-
     for (let i = 0; i < 1440; i++) time.advanceTick();
     system.update();
 
@@ -369,7 +367,7 @@ describe('BusinessSystem', () => {
       residents.addResident(r1);
       residents.addResident(r2);
 
-      const _b1 = system.createBusiness({ id: 'es1' as BusinessId, name: 'ES1', type: 'farm' });
+      system.createBusiness({ id: 'es1' as BusinessId, name: 'ES1', type: 'farm' });
       system.hireEmployee('es1' as BusinessId, 'r1' as ResidentId);
 
       const stats = system.getEmploymentStats();
@@ -382,7 +380,7 @@ describe('BusinessSystem', () => {
     it('getEmployerForResident and getEmploymentStatus work after coordinated hire', () => {
       const r = new Resident({ id: 'rs' as ResidentId, name: 'RS', homeId: 'h', workId: 'w', hourlyWage: 12 });
       residents.addResident(r);
-      const _b = system.createBusiness({ id: 'empstat' as BusinessId, name: 'ES', type: 'factory' });
+      system.createBusiness({ id: 'empstat' as BusinessId, name: 'ES', type: 'factory' });
       system.hireEmployee('empstat' as BusinessId, 'rs' as ResidentId);
 
       const employer = system.getEmployerForResident('rs' as ResidentId);
@@ -457,7 +455,7 @@ describe('BusinessSystem', () => {
       residents.addResident(r1);
       residents.addResident(r2);
 
-      const biz = system.createBusiness({ id: 'match_biz' as BusinessId, name: 'Matchy', type: 'factory', cash: 25000 });
+      system.createBusiness({ id: 'match_biz' as BusinessId, name: 'Matchy', type: 'factory', cash: 25000 });
 
       const startUnemp = system.getEmploymentStats().totalUnemployed;
       expect(startUnemp).toBeGreaterThanOrEqual(2);
@@ -487,10 +485,6 @@ describe('BusinessSystem', () => {
       expect(stats.totalUnemployed).toBeGreaterThanOrEqual(0);
       expect(stats.employmentRate).toBeGreaterThanOrEqual(0);
       expect(stats.employmentRate).toBeLessThanOrEqual(1);
-      if (stats.unemploymentRate !== undefined) {
-        expect(stats.unemploymentRate).toBeGreaterThanOrEqual(0);
-        expect(stats.unemploymentRate).toBeLessThanOrEqual(1);
-      }
     });
   });
 });

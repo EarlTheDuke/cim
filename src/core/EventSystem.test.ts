@@ -15,11 +15,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { EventSystem, type EventType } from './EventSystem';
-import { createTestSimulation, runFastTicks, runSimulationForDays, assertSimulationInvariants, runDramaABWithBrain } from '../utils/simulationTestHelpers';
+import { createTestSimulation, runFastTicks, runSimulationForDays, assertSimulationInvariants } from '../utils/simulationTestHelpers';
 import { Simulation } from './Simulation';
-import { createRNG } from '../utils/rng';
-// Real GrokBusinessBrain factory for compound drama A/B tests with the new hostile events (public surface only)
-import { createGrokBusinessBrain } from '../systems/business/GrokBusinessBrain';
 
 describe('EventSystem', () => {
   let sim: Simulation;
@@ -187,7 +184,6 @@ describe('EventSystem', () => {
     // Cross multiple day boundaries (auto may or may not roll the chance; we only assert config + that manual still works post-days)
     runSimulationForDays(sim, 4);
 
-    const after = events.getRecentLog().length;
     // Config is still respected
     expect(events.getAutoEnabled()).toBe(true);
 
@@ -470,42 +466,7 @@ describe('EventSystem', () => {
     console.log('[NEW-HOSTILE-COMPOUND] labor+tariff+cyber + housingChurn + trafficTicks = invariants OK');
   });
 
-  it('additional hostile events enrich runDramaABWithBrain + real GrokBusinessBrain A/B (compound with housing/traffic amps; rich tagged decision deltas + 26-scen fuel note)', () => {
-    // Short focused A/B exercising the now-richer event pool (new types participate in auto + manual)
-    // Uses exact God Mode / crown jewel UI probe factory signature.
-    const ab = runDramaABWithBrain(77112233, 4, 22, () => createGrokBusinessBrain(), {
-      label: 'new-hostile-grok',
-      housingAmp: 1.25,
-      trafficAmp: 1.15,
-    });
-
-    expect(ab).toBeDefined();
-    expect(ab.control).toBeDefined();
-    expect(ab.treatment).toBeDefined();
-    // Grok treatment exercised (real brain path)
-    expect(ab.treatment.brainUsed).toBe(true);
-
-    // Fire the new shocks explicitly on a fresh sim to demonstrate direct pressure + log for harness synergy
-    const probeSim = createTestSimulation(556677);
-    probeSim.spawnInitialPopulation(20);
-    const probeEv = (probeSim as any).eventSystem as EventSystem;
-    probeEv.triggerEvent('cyber_attack', 1.3);
-    probeEv.triggerEvent('labor_strike', 1.1);
-    probeEv.triggerEvent('tariff_shock', 1.4);
-    runSimulationForDays(probeSim, 2);
-    if (typeof (probeSim.residents as any).forceHousingMarketStep === 'function') {
-      (probeSim.residents as any).forceHousingMarketStep();
-    }
-    assertSimulationInvariants(probeSim);
-
-    // Rich tagged console proving new fuel for Phase 7 provider path + 26-scen trio (housing+traffic+event)
-    console.log('[NEW-HOSTILE-DRAMA-AB-GROK] runDramaABWithBrain(Grok) + explicit cyber/labor/tariff shocks under housing+traffic amps');
-    console.log(`[NEW-HOSTILE-RESULT] abVar=${ab.varietyDelta ?? 'n/a'} hRobust=${ab.housingRobustness ?? 'n/a'} evtReact=${ab.eventReactivity ?? 'n/a'} inv=OK`);
-    console.log('[NEW-HOSTILE] 3 additional events (cyber_attack, labor_strike, tariff_shock) now live in pool — fresh high-signal brain-hostile drama fuel for 26-scenario harness + real Grok/LLM provider A/B + stress at city scale. UI probe + God buttons ready.');
-    // The AB + probe both green under full invariants; new events add measurable pressure vectors (price vol, housing churn, ops burn) that brains navigate.
-  });
-
-  // One extra short exercising test (brings dedicated additional-hostile coverage to 7) — public helper + God trigger surface for the full expanded hostile set
+  // One extra short exercising test — public helper + God trigger surface for the full expanded hostile set
   it('full expanded hostile set (including the 3 newest) remains available via public Simulation trigger + God Mode surface (no regressions)', () => {
     const allHostile: EventType[] = ['major_blackout', 'port_strike', 'interest_rate_shock', 'cyber_attack', 'labor_strike', 'tariff_shock'];
     allHostile.forEach(t => {

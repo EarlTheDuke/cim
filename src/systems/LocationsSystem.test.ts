@@ -171,9 +171,9 @@ describe('LocationsSystem', () => {
   // === Housing market basics (rent + vacancy queries) ===
 
   it('getMonthlyRent returns explicit baseRent or sensible default', () => {
-    const cheap = system.createHome('h_cheap', 'Cheap', { x: 0, y: 0 }, 4, 25);
-    const expensive = system.createHome('h_rich', 'Rich', { x: 10, y: 10 }, 2, 80);
-    const defaulted = system.createHome('h_def', 'Defaulted', { x: 20, y: 20 }, 3);
+    system.createHome('h_cheap', 'Cheap', { x: 0, y: 0 }, 4, 25);
+    system.createHome('h_rich', 'Rich', { x: 10, y: 10 }, 2, 80);
+    system.createHome('h_def', 'Defaulted', { x: 20, y: 20 }, 3);
 
     expect(system.getMonthlyRent('h_cheap')).toBe(25);
     expect(system.getMonthlyRent('h_rich')).toBe(80);

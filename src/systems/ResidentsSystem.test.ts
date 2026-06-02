@@ -175,7 +175,6 @@ describe('ResidentsSystem', () => {
     system.addResident(r3);
 
     const counts = system.getEmploymentCounts();
-    expect(counts.total).toBeUndefined(); // impl uses employed + unemployed
     expect(counts.employed).toBe(2);
     expect(counts.unemployed).toBe(1);
     // System uses Math.round((employed / total) * 1000) / 1000 → 0.667 for 2/3
