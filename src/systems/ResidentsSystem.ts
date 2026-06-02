@@ -682,7 +682,6 @@ export class ResidentsSystem {
         const spend = Math.min(resident.money, Math.max(basePrice * 0.85, Math.min(basePrice * 2.1, resident.money * 0.07 + (hunger > 65 ? 1.8 : 0))));
         resident.money = Math.max(0, resident.money - spend);
         const relief = Math.max(5.0, Math.min(8.2, (hunger / 13) + ((info ? info.foodReliefPotential : 6.5) - 1)));
-        const beforeHunger = resident.needs.hunger;
         resident.needs.hunger = Math.max(0, resident.needs.hunger - relief);
         // tiny fatigue bonus (satisfied)
         resident.needs.fatigue = Math.max(0, resident.needs.fatigue - 1.3);

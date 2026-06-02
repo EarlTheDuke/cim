@@ -588,10 +588,11 @@ export class ResidentInspector {
     const isTagged = !!(r as any).__isGrokAgent;
     if (hasBrain || hasJobTarget || hasHomeTarget || conserving || decLog.length > 0 || isTagged) {
       let aiHtml = `<div class="m-label">🧠 AI Agent Controls (voluntary decisions)</div><div class="emp-values">`;
+      // Hoisted so both the brain-summary block and the recent-decisions block below can reference them.
+      const brainInst = r.getBrain?.();
+      const isGrokB = !!brainInst && (brainInst.name?.includes('Grok') || (brainInst.lastProviderName && /Grok|Provider/i.test(brainInst.lastProviderName)));
+      const prov = brainInst?.lastProviderName || (isGrokB ? 'GrokResidentBrain (provider)' : null);
       if (isTagged || hasBrain) {
-        const brainInst = r.getBrain?.();
-        const isGrokB = !!brainInst && (brainInst.name?.includes('Grok') || (brainInst.lastProviderName && /Grok|Provider/i.test(brainInst.lastProviderName)));
-        const prov = brainInst?.lastProviderName || (isGrokB ? 'GrokResidentBrain (provider)' : null);
         let bName = brainInst?.name || ((r as any).__isGrokAgent ? 'GrokAgent' : 'AI');
         const provTag = prov ? (/GrokXAI|Provider/i.test(String(prov)) ? `Grok-xAI (real: ${prov})` : `provider:${prov}`) : (isGrokB ? 'stub' : null);
         if (isGrokB) bName = `🧠 BRAIN (lastProviderName: ${provTag || prov || 'stub'})`;

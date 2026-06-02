@@ -40,12 +40,9 @@
 import { Simulation } from '../core/Simulation';
 import { BusinessSystem } from '../systems/BusinessSystem';
 import type { IDecisionMaker } from '../systems/business/BusinessBrain';
-import { createRuleBasedBrain, buildBusinessContext } from '../systems/business/BusinessBrain';
+import { createRuleBasedBrain } from '../systems/business/BusinessBrain';
 import { createGrokBusinessBrain } from '../systems/business/GrokBusinessBrain';
-import { EventSystem, type EventType } from '../core/EventSystem';
-import type { Resident } from '../entities/Resident';
-import type { Business } from '../entities/Business';
-import type { Location } from '../entities/Location';
+import { type EventType } from '../core/EventSystem';
 
 // ===== Core creators & runners (high-fidelity, real ticks) =====
 
@@ -95,7 +92,7 @@ export function assertMoneyFlowInvariants(sim: Simulation): void { assertSimulat
 export function assertInventoryInvariants(sim: Simulation): void { assertSimulationInvariants(sim); }
 export function assertCommuteInvariants(sim: Simulation): void { assertSimulationInvariants(sim); }
 export function assertHousingInvariants(sim: Simulation): void { assertSimulationInvariants(sim); }
-export function assertDecisionLogIntegrity(sim: any): void { /* exercised inside runners via brain stats */ }
+export function assertDecisionLogIntegrity(_sim: any): void { /* exercised inside runners via brain stats */ }
 
 // ===== Brain wiring (real Grok + RuleBased A/B support) =====
 
@@ -457,9 +454,7 @@ export function runRealBrainLongDramaStressReportV3Fast(scales?: any[]) {
 
 // ===== LLM Bundle + v6 Housing Drama Summary (26-scenario hardened surface) =====
 
-export function runLLMEvaluationBundle(seeds: number[] = [1, 2, 3, 7, 11, 19], opts: any = {}): any {
-  const shortDays = opts.shortDays ?? 3;
-  const pop = opts.pop ?? 18;
+export function runLLMEvaluationBundle(_seeds: number[] = [1, 2, 3, 7, 11, 19], opts: any = {}): any {
   const scenariosToRun = Math.min(DRAMA_SCENARIOS_26.length || 26, opts.fastMode ? 8 : 14);
 
   const perScenario = DRAMA_SCENARIOS_26.slice(0, scenariosToRun).map((sc: any, i: number) => ({
@@ -614,27 +609,27 @@ export async function runShadowModeDramaExamplesOnNewFuel() {
 }
 
 export async function demoShadowModeMajorBlackout() {
-  const ab = runDramaABWithBrain(0x10A1, 5, 27, () => createGrokBusinessBrain(), { label: 'shadow-blackout', events: [{ day: 1, type: 'major_blackout' as EventType, intensity: 1.8 }], housingAmp: 1.5, trafficAmp: 1.3 });
+  runDramaABWithBrain(0x10A1, 5, 27, () => createGrokBusinessBrain(), { label: 'shadow-blackout', events: [{ day: 1, type: 'major_blackout' as EventType, intensity: 1.8 }], housingAmp: 1.5, trafficAmp: 1.3 });
   return { divergenceCount: 3, qualityDeltaProxy: 0.09, label: 'Directly ties ... major_blackout ...' };
 }
 
 export async function demoShadowModeCompoundMultiShock() {
-  const ab = runDramaABWithBrain(0x20B2, 6, 30, () => createGrokBusinessBrain(), { label: 'shadow-compound-DRAMA_SCENARIOS_26', events: DRAMA_SCENARIOS_26.find((s: any) => s.id.includes('labor-tariff'))?.events || [], housingAmp: 1.7, trafficAmp: 1.5 });
+  runDramaABWithBrain(0x20B2, 6, 30, () => createGrokBusinessBrain(), { label: 'shadow-compound-DRAMA_SCENARIOS_26', events: DRAMA_SCENARIOS_26.find((s: any) => s.id.includes('labor-tariff'))?.events || [], housingAmp: 1.7, trafficAmp: 1.5 });
   return { divergenceCount: 4, qualityDeltaProxy: 0.11, label: 'Directly ties the fresh ... + compound multi-shock fuel ... DRAMA_SCENARIOS_26' };
 }
 
 // ===== Misc compat (perf, regression, property, unemployment, etc.) =====
 
-export function benchmarkTicks(sim: Simulation, ticks: number): number { return 24800; }
-export function runStressBenchmark(...a: any[]): any { return { tps: 23100 }; }
-export function runRegressionScenario(...a: any[]): any { return { passed: true }; }
-export function formatPerformanceReport(r: any): string { return 'perf ok'; }
+export function benchmarkTicks(_sim: Simulation, _ticks: number): number { return 24800; }
+export function runStressBenchmark(..._a: any[]): any { return { tps: 23100 }; }
+export function runRegressionScenario(..._a: any[]): any { return { passed: true }; }
+export function formatPerformanceReport(_r: any): string { return 'perf ok'; }
 export function createPerformanceReport(): any { return { tps: 27000 }; }
 export function runScaleBenchmarks(): any { return { tps: 29500 }; }
 export function getActivityDistribution(): any { return { work: 0.61, home: 0.29 }; }
-export function getSimulationHealthSummary(sim: Simulation): string { return 'GREEN'; }
+export function getSimulationHealthSummary(_sim: Simulation): string { return 'GREEN'; }
 export function runPropertyTrials(): any { return { passed: true }; }
-export function computeUnemploymentRate(sim: Simulation): number { return 0.105; }
+export function computeUnemploymentRate(_sim: Simulation): number { return 0.105; }
 export function getTotalSystemMoney(sim: Simulation): number {
   const res = (sim.residents as any)?.getAllResidents?.() || [];
   return res.reduce((sum: number, r: any) => sum + (r.money || 0), 0);
@@ -646,10 +641,10 @@ export function runBrainStressBenchmark(): any { return { passed: true }; }
 export function runABComparison(seed: number, days: number, pop: number, useBrain: boolean): any {
   return runDramaABWithBrain(seed, days, pop, useBrain ? () => createGrokBusinessBrain() : true);
 }
-export function runEventBrainHousingDramaScenario(...a: any[]): any { return { invariantsPassed: true, housing: { pressuredResidentCount: 6 } }; }
-export function runHousingEventBrainDrama(...a: any[]): any { return { invariantsPassed: true }; }
-export function runTrafficEventBrainDrama(...a: any[]): any { return { invariantsPassed: true }; }
-export function createCompoundDramaSchedule(...a: any[]): any { return COMPOUND_FULL_CITY_DRAMA_SCHEDULES[0] || {}; }
+export function runEventBrainHousingDramaScenario(..._a: any[]): any { return { invariantsPassed: true, housing: { pressuredResidentCount: 6 } }; }
+export function runHousingEventBrainDrama(..._a: any[]): any { return { invariantsPassed: true }; }
+export function runTrafficEventBrainDrama(..._a: any[]): any { return { invariantsPassed: true }; }
+export function createCompoundDramaSchedule(..._a: any[]): any { return COMPOUND_FULL_CITY_DRAMA_SCHEDULES[0] || {}; }
 export function createTrafficCongestionDramaSchedule(): any[] { return [{ day: 3, type: 'heatwave' as EventType }]; }
 export function createRecessionInfraTrafficSchedule(): any[] { return []; }
 export function createCompoundFullCityDramaSchedule(): any[] { return []; }
@@ -662,9 +657,9 @@ export function runFullCityTrafficEventDrama(label: string, days: number, pop: n
   applyTrafficStressAmplifier(sim, 1.15);
   return { label, days, pop, brain: { brainEnabled: enableBrain }, sim, maxPressuredDuringDrama: 5, trafficStoppedDelta: 3, invariantsPassed: true };
 }
-export function runRecessionInfraTrafficDrama(...args: any[]): any { return runFullCityTrafficEventDrama('recession-infra', 4, 19, 991001, true); }
-export function runCompoundFullCityDrama(...args: any[]): any { return runFullCityTrafficEventDrama('compound', 5, 22, 424242, true); }
-export function runEventAwareABComparison(...args: any[]): any { return { invariantsPassed: true, deltas: { moneyDelta: 1100 } }; }
+export function runRecessionInfraTrafficDrama(..._args: any[]): any { return runFullCityTrafficEventDrama('recession-infra', 4, 19, 991001, true); }
+export function runCompoundFullCityDrama(..._args: any[]): any { return runFullCityTrafficEventDrama('compound', 5, 22, 424242, true); }
+export function runEventAwareABComparison(..._args: any[]): any { return { invariantsPassed: true, deltas: { moneyDelta: 1100 } }; }
 
 // ===== Global exposure for God Mode / UI probe / console (post-restore) =====
 

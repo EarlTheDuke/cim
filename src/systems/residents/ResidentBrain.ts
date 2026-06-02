@@ -31,6 +31,8 @@ export type ResidentDecisionType =
   | 'conserve'          // Intent to spend less / save for wealth (new for agent spending agency)
   | 'social'            // Intent to seek social interaction (linger near others, visit clusters, etc.)
   | 'acquire_transport' // Buy car/bike etc. to shorten future commute times (real time save on roads, unlocks farther high-value jobs)
+  | 'sell_transport'    // Sell owned vehicle: recoups ~65% value, reverts to baseline commute speed (market reallocation)
+  | 'sell_vehicle'      // Alias of sell_transport (compat)
   | 'interview';        // Talk to boss / negotiate at current or target workplace for wage bump or bonus (social layer on job progress)
 
 export interface ResidentDecision {
@@ -138,6 +140,19 @@ export interface ResidentContext {
   // drive real flows; brains/rig can target high net or "riches + low burn" (high net + low spend/wage).
   readonly netWealth?: number;
   readonly lifetimeNet?: number;
+
+  // === Rent / transport / interview signals (additive; built in ResidentsSystem.getResidentContextForAI) ===
+  // Optional so synthetic/test contexts can omit them. Brains read these (often via `as any`) for
+  // rent-aware home plays, transport ROI, and wage-negotiation intents.
+  readonly currentHomeRent?: number;
+  readonly lastRentPaid?: number;
+  readonly hasPersonalTransport?: boolean;
+  readonly interviewTargetId?: string | null;
+  readonly ownsVehicle?: boolean;
+  readonly vehicleValue?: number;
+  readonly availableTransportPrice?: number;
+  readonly estimatedDailyTransportCost?: number;
+  readonly estimatedCommuteMinutesToWork?: number;
 }
 
 /** Core swappable contract for resident "intelligence". */
@@ -500,7 +515,8 @@ export class GrokResidentBrain implements IResidentDecisionMaker {
       }
       // React to recent drama sequences (multiple recent drama-tagged decisions + current inDrama)
       const recentDramaCount = memDecs.filter((d: any) => /DRAMA|drama|shock|crisis|hostile/i.test(d.reason || '')).length;
-      if (recentDramaCount >= 1 && (activeDrama as any).length > 0) {
+      const dramaNowForMem = ((ctx as any).activeHostileEvents || (ctx as any).activeDramaTags || []) as string[];
+      if (recentDramaCount >= 1 && dramaNowForMem.length > 0) {
         memoryNote += ' [MEMORY: reacting to recent drama sequence]';
       }
     }
@@ -514,9 +530,6 @@ export class GrokResidentBrain implements IResidentDecisionMaker {
     // === CIM NET WEALTH AWARENESS (additive for brain optimization on richer win conditions) ===
     // netWealth / lifetimeNet now in ctx from real flows (voluntary job/home/conserve/acquire).
     // Heuristic can bias toward plays that improve net (e.g. lower rent% of net, transport ROI vs wage delta).
-    const netW = (effectiveCtx as any).netWealth ?? (effectiveCtx as any).lifetimeNet ?? 0;
-    const myMoneyForCalc = moneySafe || 40;
-    const rentPctOfNet = (netW > 0) ? (effectiveCtx.currentHomeRent || 0) / Math.max(1, netW) : 0;
 
     // === CIM FOOD PURCHASE (additive real-world: "do they buy food?") ===
     // Voluntary decision when hungry + price affordable relative to dailyPotential (earnings buffer).
