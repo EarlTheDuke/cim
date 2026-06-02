@@ -1,0 +1,824 @@
+:root {
+  --bg: #0f1115;
+  --panel: #1a1d24;
+  --accent: #4ade80;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-y: auto; /* ensure we can always scroll down to the full God Mode panel even when it is very tall */
+}
+
+#app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+#simulation-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+#controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 800px;
+  background: var(--panel);
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.time-display {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.speed-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.speed-controls button {
+  padding: 6px 14px;
+  border: 1px solid #334155;
+  background: #1e2533;
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.1s ease;
+}
+
+.speed-controls button:hover {
+  background: #2a3242;
+  border-color: #475569;
+}
+
+.speed-controls button.active {
+  background: var(--accent);
+  color: #0f1115;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+#city-canvas {
+  border: 2px solid #334155;
+  border-radius: 8px;
+  background: #111318;
+  image-rendering: pixelated;
+}
+
+#debug-panel {
+  width: 100%;
+  max-width: 800px;
+  background: var(--panel);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+#debug-panel h3 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+#debug-info {
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+/* ============================================
+   Phase 1: Resident Inspector / God Mode Panel
+   (mounted into #inspector-mount)
+   ============================================ */
+
+#viz-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1120px;
+  justify-content: center;
+}
+
+#inspector-mount {
+  /* Inspector will size itself */
+}
+
+.resident-inspector {
+  width: 290px;
+  min-width: 290px;
+  max-height: 600px;
+  background: var(--panel);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.inspector-header {
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #334155;
+}
+
+.inspector-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+}
+
+.god-badge {
+  font-size: 0.6rem;
+  background: #f472b6;
+  color: #0f1115;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.inspector-subtitle {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.search-wrap {
+  margin: 6px 0 4px;
+}
+
+.inspector-search {
+  width: 100%;
+  background: #111318;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: var(--text);
+  font-size: 0.78rem;
+  outline: none;
+}
+
+.inspector-search:focus {
+  border-color: var(--accent);
+}
+
+.section-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  margin: 8px 0 3px;
+  font-weight: 600;
+}
+
+.resident-list {
+  flex: 1;
+  min-height: 80px;
+  max-height: 168px;
+  overflow-y: auto;
+  border: 1px solid #2a3242;
+  border-radius: 4px;
+  background: #111318;
+  padding: 2px;
+  font-size: 0.75rem;
+}
+
+.resident-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  margin: 1px 0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.08s ease;
+}
+
+.resident-row:hover {
+  background: #1e2533;
+}
+
+.resident-row.selected {
+  background: #334155;
+  outline: 1px solid #64748b;
+}
+
+.r-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.r-activity {
+  font-size: 0.65rem;
+  padding: 0 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+  text-transform: capitalize;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.r-money {
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: #86efac;
+  flex-shrink: 0;
+  min-width: 34px;
+  text-align: right;
+}
+
+/* Activity badge colors (match canvas) */
+.act-sleeping { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
+.act-at-home { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+.act-working { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+.act-commuting-to-work,
+.act-commuting-home,
+.act-at-work { background: rgba(167, 139, 250, 0.2); color: #a78bfa; }
+.act-idle { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+
+.inspector-details {
+  background: #111318;
+  border: 1px solid #2a3242;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  min-height: 118px;
+}
+
+.no-selection {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 4px 2px;
+  line-height: 1.3;
+}
+
+.detail-head {
+  margin-bottom: 4px;
+}
+
+.detail-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.1;
+}
+
+.detail-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.detail-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 8px;
+  margin: 4px 0;
+}
+
+.detail-metric {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.73rem;
+}
+
+.m-label {
+  color: #94a3b8;
+  font-size: 0.65rem;
+}
+
+.m-value {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+.detail-metric.act-sleeping .m-value { color: #60a5fa; }
+.detail-metric.act-at-home .m-value { color: #fbbf24; }
+.detail-metric.act-working .m-value { color: #4ade80; }
+
+.detail-schedule,
+.detail-locations {
+  margin-top: 4px;
+  padding-top: 3px;
+  border-top: 1px dashed #2a3242;
+  font-size: 0.72rem;
+}
+
+.sched-values,
+.loc-values {
+  font-size: 0.72rem;
+  margin-top: 1px;
+}
+
+.loc-values code {
+  font-size: 0.68rem;
+  background: #1a1d24;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.detail-hint {
+  margin-top: 5px;
+  font-size: 0.6rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.god-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.god-btn {
+  flex: 1 1 calc(50% - 2px);
+  min-width: 68px;
+  padding: 3px 6px;
+  font-size: 0.68rem;
+  border: 1px solid #475569;
+  background: #1e2533;
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.08s ease;
+  text-align: center;
+}
+
+.god-btn:hover {
+  background: #2a3242;
+  border-color: #64748b;
+}
+
+.god-btn:active {
+  transform: translateY(1px);
+}
+
+.god-btn-money {
+  border-color: #4ade80;
+  color: #86efac;
+}
+
+.god-btn-secondary {
+  flex: 1 1 calc(50% - 2px);
+  font-size: 0.65rem;
+  background: #1a1d24;
+}
+
+.god-util-row {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.inspector-footer {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 0.58rem;
+  color: #475569;
+  border-top: 1px solid #2a3242;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.list-empty {
+  padding: 8px;
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  font-size: 0.7rem;
+}
+
+/* Make debug panel sit nicely below the wider viz row */
+#debug-panel {
+  max-width: 1120px;
+}
+
+/* ============================================
+   God Mode Tools Panel (new powerful debug UI)
+   ============================================ */
+.god-mode-tools {
+  margin-top: 12px;
+  background: #0f1115;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.73rem;
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.god-header {
+  border-bottom: 1px solid #334155;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+.god-header h3 {
+  margin: 0 0 2px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.god-subtitle {
+  font-size: 0.62rem;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.god-section {
+  margin-bottom: 8px;
+}
+.god-section-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #64748b;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.god-time-line {
+  font-family: 'Courier New', monospace;
+  background: #111318;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+.god-time-value { font-weight: 700; color: #bae6fd; }
+.god-tick { color: #64748b; font-size: 0.68rem; }
+
+.god-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.god-btn {
+  flex: 1 1 auto;
+  min-width: 72px;
+  padding: 4px 7px;
+  font-size: 0.66rem;
+  border: 1px solid #475569;
+  background: #1e2533;
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.06s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+.god-btn:hover { background: #2a3242; border-color: #64748b; }
+.god-btn:active { transform: translateY(1px); }
+
+.god-btn-primary {
+  border-color: #c026d3;
+  color: #e879f9;
+}
+
+.god-custom-jump {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 0.68rem;
+}
+.god-custom-jump label { color: #94a3b8; }
+.god-hour-input {
+  width: 72px;
+  background: #111318;
+  border: 1px solid #475569;
+  border-radius: 3px;
+  padding: 2px 5px;
+  color: var(--text);
+  font-size: 0.72rem;
+}
+.god-hint { color: #475569; font-size: 0.58rem; }
+
+.god-summary {
+  font-family: 'Courier New', monospace;
+  background: #111318;
+  padding: 3px 6px;
+  border-radius: 3px;
+  margin-bottom: 4px;
+  font-size: 0.7rem;
+}
+
+.god-chart-label {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  margin: 5px 0 2px;
+  font-weight: 600;
+}
+
+.god-stacked-bar {
+  display: flex;
+  height: 14px;
+  background: #1a1d24;
+  border: 1px solid #2a3242;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+
+.god-bar-segment {
+  height: 100%;
+  transition: width 0.1s ease;
+  min-width: 1px;
+  border-right: 1px solid rgba(0,0,0,0.3);
+}
+.god-bar-segment:last-child { border-right: none; }
+
+/* Reuse activity colors from inspector */
+.god-bar-segment.act-sleeping { background: #60a5fa; }
+.god-bar-segment.act-at-home { background: #fbbf24; }
+.god-bar-segment.act-working { background: #4ade80; }
+.god-bar-segment.act-commuting_to_work,
+.god-bar-segment.act-commuting_home,
+.god-bar-segment.act-at-work { background: #a78bfa; }
+.god-bar-segment.act-idle { background: #94a3b8; }
+
+.god-mini-legend {
+  font-size: 0.55rem;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.god-needs-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.god-need-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+}
+
+.god-need-label {
+  width: 52px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.god-need-track {
+  flex: 1;
+  height: 8px;
+  background: #1a1d24;
+  border: 1px solid #2a3242;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.god-need-fill {
+  height: 100%;
+  transition: width 0.08s linear;
+  border-radius: 2px;
+}
+.god-need-fill.high { filter: brightness(1.1); }
+.god-need-fill.critical { background: #f87171 !important; }
+
+.god-need-val {
+  width: 26px;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+.god-need-val.high { color: #fcd34d; }
+.god-need-val.critical { color: #f87171; }
+
+.god-chart-hint {
+  font-size: 0.56rem;
+  color: #475569;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.god-footer {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #2a3242;
+  font-size: 0.58rem;
+  color: #475569;
+  text-align: center;
+}
+
+/* Live trend canvases (Agent F rich data viz) */
+.god-trend-canvas {
+  image-rendering: pixelated; /* crisp small charts */
+}
+.god-trend-wrap {
+  background: #111318;
+  border: 1px solid #2a3242;
+  border-radius: 4px;
+  padding: 3px 4px 2px;
+}
+
+/* ============================================
+   Enhanced Resident Inspector: Visual Needs + Positions
+   ============================================ */
+.detail-needs {
+  margin: 4px 0;
+  padding: 4px 0;
+  border-top: 1px dashed #2a3242;
+  border-bottom: 1px dashed #2a3242;
+}
+
+.need-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 2px 0;
+  font-size: 0.66rem;
+}
+
+.need-name {
+  width: 46px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  font-size: 0.62rem;
+}
+
+.need-track {
+  flex: 1;
+  height: 7px;
+  background: #1a1d24;
+  border: 1px solid #2a3242;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.need-fill {
+  height: 100%;
+  transition: width 0.1s ease;
+  border-radius: 2px;
+}
+.need-fill.critical { filter: brightness(1.15); }
+
+.need-num {
+  width: 22px;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+
+.loc-values .pos {
+  font-size: 0.62rem;
+  color: #64748b;
+  font-family: 'Courier New', monospace;
+}
+
+/* Danger variant for spike buttons in inspector */
+.god-btn-danger {
+  border-color: #f87171;
+  color: #fca5a5;
+}
+
+/* ============================================
+   Scenario Tools section (Agent G: Scenario Tools & Advanced Event Injection)
+   ============================================ */
+
+.god-custom-pop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 4px;
+  font-size: 0.68rem;
+  flex-wrap: wrap;
+}
+.god-custom-pop label { color: #94a3b8; margin-right: 2px; }
+.god-small-input {
+  width: 58px;
+  background: #111318;
+  border: 1px solid #475569;
+  border-radius: 3px;
+  padding: 2px 6px;
+  color: var(--text);
+  font-size: 0.72rem;
+}
+
+.god-scenario-io {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #334155;
+}
+.god-scenario-textarea {
+  width: 100%;
+  background: #0a0c10;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  color: #cbd5e1;
+  font-family: ui-monospace, 'Courier New', monospace;
+  font-size: 0.62rem;
+  line-height: 1.25;
+  padding: 6px 8px;
+  resize: vertical;
+  margin-bottom: 4px;
+}
+.god-scenario-textarea:focus {
+  border-color: #a78bfa;
+  outline: none;
+}
+.god-scenario-status {
+  display: block;
+  font-size: 0.62rem;
+  color: #a78bfa;
+  margin-top: 2px;
+  min-height: 1em;
+}
+
+/* Polish for 🎬 Curated Demo Scenarios Library (prominent in God Mode panel) */
+#god-mode-tools .god-section .god-btn-primary {
+  border-color: #c026d3;
+  color: #e879f9;
+  font-weight: 500;
+}
+#god-mode-tools .god-section .god-btn-primary:hover {
+  background: #2f1a3a;
+  border-color: #e879f9;
+}
+
+/* === Emergency scroll + viewport fixes (added to guarantee user can always reach bottom God Mode) === */
+html, body {
+  height: auto !important;
+  min-height: 100vh;
+  overflow-y: auto !important;
+}
+
+#app {
+  min-height: 100vh;
+  padding-bottom: 80px; /* breathing room so the very bottom of a tall God panel is reachable */
+}
+
+/* Make the main simulation container grow naturally instead of being constrained */
+#simulation-container {
+  min-height: 0;
+}
+
+/* Slightly more compact canvas on first load so the God panel is easier to reach on smaller screens */
+#city-canvas {
+  max-height: 520px;
+  width: auto;
+  height: auto;
+}

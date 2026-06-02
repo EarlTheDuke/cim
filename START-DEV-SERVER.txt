@@ -1,0 +1,31 @@
+﻿# ================================================
+# CityWithLifeGrok - Commands to Start Dev Server
+# ================================================
+# 
+# INSTRUCTIONS:
+# 1. Open this file in Notepad (double-click it)
+# 2. Select the text you want and press Ctrl+C to copy
+# 3. Paste into PowerShell with Ctrl+V
+#
+# ================================================
+
+# STEP 1: Go to the correct folder
+cd "C:\Users\sugar\Desktop\ALL AI GAMES\Projects in progress\CityWithLifeGrok"
+
+# STEP 2: Stop any old servers
+Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+
+# STEP 3: Clear Vite cache (very important!)
+Remove-Item -Recurse -Force node_modules\.vite -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force .vite -ErrorAction SilentlyContinue
+
+# STEP 4: Start the server with cache bypass
+npm run dev -- --force
+
+
+# ================================================
+# AFTER THE SERVER STARTS:
+# 1. Wait until you see "Local: http://localhost:5173/"
+# 2. Go to your browser and visit: http://localhost:5173/
+# 3. Press Ctrl + Shift + R (hard refresh)
+# ================================================

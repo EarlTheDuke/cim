@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CityWithLifeGrok</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>CityWithLifeGrok</h1>
+        <p class="subtitle">A living city simulation powered by Grok</p>
+      </header>
+
+      <div id="simulation-container">
+        <div id="controls">
+          <div class="time-display">
+            <span id="sim-time">Day 1, 08:00</span>
+          </div>
+          <div class="speed-controls">
+            <button id="btn-pause">Pause</button>
+            <button id="btn-1x">1x</button>
+            <button id="btn-10x">10x</button>
+            <button id="btn-100x">100x</button>
+            <button id="btn-1000x">1000x</button>
+            <button id="btn-realtime" title="True 1:1 wall time — 1 simulated second = 1 real second. Ideal for watching commutes.">Real Time (1:1)</button>
+          </div>
+        </div>
+
+        <!-- Main visualization row: canvas + inspector side-by-side -->
+        <div id="viz-row">
+          <!-- Reduced initial height so the God Mode panel at the bottom is reachable on most screens.
+               The renderer will still work; we can increase later once scrolling + layout is solid. -->
+          <canvas id="city-canvas" width="760" height="480"></canvas>
+          <div id="inspector-mount"></div>
+        </div>
+
+        <div id="debug-panel" style="border: 3px solid #f472b6; min-height: 140px; scroll-margin-bottom: 80px;">
+          <h3 style="color:#f472b6">Debug — Scroll down for full God Mode (Time, Business, Housing, Traffic, Crown Jewel Probe)</h3>
+          <div id="debug-info"></div>
+          <!-- God Mode Tools (time control, event injector, live charts) are dynamically mounted below -->
+          
+          <div class="save-load-controls" style="margin-top: 12px; display: flex; gap: 8px;">
+            <button id="btn-save">Save State</button>
+            <button id="btn-load">Load Last Save</button>
+            <span id="save-status" style="font-size: 0.75rem; align-self: center; color: #64748b;"></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Ultra-minimal fallback script: guarantees the page always renders something visible + scrollable
+         even if the full TypeScript app has bundler/cache errors. This is what you should see first.
+         Phase A stabilization: calmer language, longer timeout, checks for __citySimBooted flag set by main.ts,
+         and only shows strong "stale cache" recovery steps if the core marker never appeared. -->
+    <script>
+      (function() {
+        // Make sure we can always scroll
+        document.documentElement.style.height = 'auto';
+        document.body.style.minHeight = '100vh';
+        document.body.style.overflowY = 'auto';
+
+        // Phase A: Smarter, less alarming provisional loader. Main.ts sets window.__citySimBooted early.
+        // Only escalate to scary "PAGE LOADED (fallback mode)" if the god status marker is still missing after 5.5s.
+        setTimeout(function() {
+          const panel = document.getElementById('debug-panel');
+          if (!panel) return;
+
+          const alreadyHasMarker = !!document.getElementById('god-fallback-status');
+          const bootFlag = (window as any).__citySimBooted === true;
+
+          if (alreadyHasMarker || bootFlag) {
+            // Core marker or flag present → main.ts executed at least partially. No scary banner.
+            return;
+          }
+
+          // Only now (late) create the visible diagnostic if truly nothing from main.ts appeared.
+          const status = document.createElement('div');
+          status.id = 'god-fallback-status';
+          status.style.cssText = 'margin-top:12px;padding:12px;background:#1f2937;border:2px solid #f472b6;border-radius:6px;font-family:monospace;font-size:13px;color:#e0e7ff;';
+          status.innerHTML = 
+            '<strong style="color:#f472b6">PAGE LOADED (provisional / fallback UI only)</strong><br>' +
+            'The main simulation module (src/main.ts + imports) did not finish initializing the God status marker.<br><br>' +
+            '<strong>Common causes:</strong> Vite dev cache after heavy edits, transient import error (e.g. LLMProvider or harness), or slow module load.<br><br>' +
+            '<strong>Recovery steps (in terminal):</strong><br>' +
+            '1. Stop dev server (Ctrl+C)<br>' +
+            '2. <code style="background:#111827;padding:2px 6px;border-radius:3px">npm run dev -- --force</code><br>' +
+            '3. Hard-refresh browser (Ctrl+Shift+R) after Vite says "ready".<br><br>' +
+            'The pink-bordered Debug panel below should contain a detailed "👑 GOD MODE STATUS" box with live diagnostics once the TS bundle succeeds.';
+          panel.appendChild(status);
+        }, 5500);
+      })();
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

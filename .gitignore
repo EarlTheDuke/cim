@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Environment / secrets (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dev server / run / test logs
+*.log
+test-output*.txt
+test-run-output.txt
+te-owned-tests.txt
+ps-agent-test-output.txt
+event-agent-test-output.txt
+validation-corrupt.txt
+validation-prefix.txt
+phase-c-stability-hardening-rich-log.txt
+hm-*.txt
+
+# Agent scratch / parallel work
+temp-parallel-agent-work/
+
+# Screenshots (large binary captures, ~80MB)
+screenshots/
+
+# Orphan / backup artifacts
+*.broken-trunc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
